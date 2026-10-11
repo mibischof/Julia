@@ -16,10 +16,10 @@ let sheetCounter = 0;
  * onSubmit(form) → false, um offen zu bleiben (z. B. bei Fehlern).
  * actions: zusätzliche Knöpfe [{ id, label, kind: 'danger' | 'ghost' }], onAction(id, form, close)
  */
-export function openSheet({ title, body, submitLabel = 'Speichern', onSubmit, actions = [], onAction, onMount, wide = false }) {
+export function openSheet({ title, body, submitLabel = 'Speichern', onSubmit, actions = [], onAction, onMount, wide = false, full = false }) {
   const id = `sheet-${++sheetCounter}`;
   const dialog = document.createElement('dialog');
-  dialog.className = `sheet${wide ? ' sheet--wide' : ''}`;
+  dialog.className = `sheet${wide ? ' sheet--wide' : ''}${full ? ' sheet--full' : ''}`;
   dialog.setAttribute('aria-labelledby', `${id}-title`);
   dialog.innerHTML = `
     <form class="sheet__form" novalidate>
@@ -166,6 +166,8 @@ export const ICONS = {
   more: svg('<circle cx="12" cy="8" r="3.2"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/>'),
   plus: svg('<path d="M12 5v14M5 12h14"/>'),
   close: svg('<path d="M6 6l12 12M18 6 6 18"/>'),
+  camera: svg('<path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.8l1.4-2h4.6l1.4 2h1.8A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12.5" r="3.5"/>'),
+  image: svg('<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="M20.5 16l-5-5-8 8.5"/>'),
   chevronLeft: svg('<path d="M15 5l-7 7 7 7"/>'),
   chevronRight: svg('<path d="M9 5l7 7-7 7"/>'),
   bell: svg('<path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>'),

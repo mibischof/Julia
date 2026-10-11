@@ -14,7 +14,7 @@ import timetable from './views/timetable.js';
 import pickups from './views/pickups.js';
 import more from './views/more.js';
 
-const VERSION = '1.0.0';
+const VERSION = '1.1.0';
 
 const ROUTES = { heute: today, kalender: calendar, stundenplan: timetable, abholen: pickups, mehr: more };
 const TABS = [

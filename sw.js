@@ -1,7 +1,9 @@
 // Service Worker: hält die App offline verfügbar und öffnet sie beim Tippen
 // auf eine Benachrichtigung. Bei jeder Änderung an Dateien VERSION erhöhen.
+// Die Texterkennung (vendor/) wird nicht vorab geladen, sondern beim ersten
+// Foto geholt und dann ebenfalls gecacht.
 
-const VERSION = 'v1.0.0';
+const VERSION = 'v1.1.0';
 const CACHE = `familienplaner-${VERSION}`;
 const ASSETS = [
   './',
@@ -22,9 +24,14 @@ const ASSETS = [
   './js/holidays.js',
   './js/ics.js',
   './js/model.js',
+  './js/ocr.js',
+  './js/photo.js',
+  './js/photo-import.js',
   './js/reminders.js',
   './js/schedule.js',
   './js/store.js',
+  './js/subjects.js',
+  './js/timetable-parse.js',
   './js/ui.js',
   './js/views/agenda.js',
   './js/views/calendar.js',

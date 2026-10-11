@@ -200,12 +200,13 @@ export function openKidForm(kid = null) {
       if (id !== 'delete') return;
       const ok = await confirmAction({
         title: `${k.name} löschen?`,
-        message: 'Stundenplan und Abholzeiten dieses Kindes werden ebenfalls gelöscht. Termine bleiben erhalten.',
+        message: 'Stundenplan, Foto und Abholzeiten dieses Kindes werden ebenfalls gelöscht. Termine bleiben erhalten.',
       });
       if (!ok) return;
       mutate(({ upsert: put, remove: del }) => {
         const s = getState();
         for (const l of s.lessons) if (l.kidId === k.id) del('lessons', l.id);
+        for (const ph of s.photos || []) if (ph.kidId === k.id) del('photos', ph.id);
         for (const p of s.pickups) {
           if (p.kidId !== k.id) continue;
           for (const o of s.pickupOverrides) if (o.pickupId === p.id) del('pickupOverrides', o.id);

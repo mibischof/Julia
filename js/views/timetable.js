@@ -2,49 +2,16 @@ import { WEEKDAYS_SHORT, weekday } from '../dates.js';
 import { byId, KID_TYPES } from '../model.js';
 import { openKidForm, openLessonForm, openPeriodsForm, dot } from '../forms.js';
 import { esc, ICONS } from '../ui.js';
+import { shortSubject, subjectHue } from '../subjects.js';
+import { kidPhoto, openPhotoImport, openPhotoViewer } from '../photo-import.js';
 
 let selectedKidId = null;
-
-// Kurzformen für schmale Bildschirme (wie man sie in Österreich sagt)
-const SHORT = {
-  mathematik: 'Mathe',
-  sachunterricht: 'SU',
-  englisch: 'Engl.',
-  'bewegung und sport': 'Turnen',
-  'kunst und gestaltung': 'Kunst',
-  'bildnerische erziehung': 'BE',
-  'technik und design': 'Werken',
-  musikerziehung: 'Musik',
-  religion: 'Reli',
-  biologie: 'Bio',
-  geografie: 'Geo',
-  geschichte: 'Gesch.',
-  informatik: 'Info',
-  nachmittagsbetreuung: 'NMB',
-};
-
-export function shortSubject(subject) {
-  const s = subject.trim();
-  const known = SHORT[s.toLowerCase()];
-  if (known) return known;
-  if (s.length <= 7) return s;
-  const words = s.split(/\s+/).filter((w) => w.length > 3);
-  if (words.length > 1) return words.map((w) => w[0].toUpperCase()).join('').slice(0, 4);
-  return `${s.slice(0, 5)}.`;
-}
 
 function subjectLabel(lesson) {
   const short = lesson.short || shortSubject(lesson.subject);
   const cls = `tt__subject${short.length >= 7 ? ' tt__subject--long' : ''}`;
   if (short === lesson.subject) return `<span class="${cls}" lang="de">${esc(lesson.subject)}</span>`;
   return `<span class="${cls}" lang="de"><span class="tt__full">${esc(lesson.subject)}</span><span class="tt__short" aria-hidden="true">${esc(short)}</span></span>`;
-}
-
-/** Gleiches Fach → gleicher Farbton. */
-function subjectHue(subject) {
-  let h = 0;
-  for (const ch of subject.toLowerCase()) h = (h * 31 + ch.codePointAt(0)) % 3600;
-  return Math.round(h / 10);
 }
 
 function renderGrid(state, kid, today) {
@@ -115,12 +82,26 @@ export default {
         : '';
     const info = [KID_TYPES[kid.type], kid.institution, kid.className].filter(Boolean).join(' · ');
     const hasPlan = kid.type === 'schule' || kid.type === 'hort';
+    const photo = kidPhoto(state, kid.id);
+    const hasLessons = state.lessons.some((l) => l.kidId === kid.id);
+    const photoBar = `<div class="photo-bar">
+        <label class="btn ${hasLessons ? 'btn--soft' : 'btn--primary'} file-btn">${ICONS.camera}${photo ? 'Neues Foto' : 'Stundenplan abfotografieren'}
+          <input type="file" accept="image/*" id="f-timetable-photo" data-change="timetable-photo" aria-label="Foto vom Stundenplan aufnehmen oder auswählen"></label>
+        ${
+          photo
+            ? `<button type="button" class="photo-thumb" data-action="view-photo" aria-label="Foto vom Stundenplan ansehen"><img src="${photo.dataUrl}" alt=""></button>
+               <button type="button" class="btn btn--small btn--ghost" data-action="edit-with-photo">${ICONS.image}Mit Foto nachtragen</button>`
+            : ''
+        }
+      </div>`;
     return `${head}${tabs}
       <div class="kid-line">${dot(kid.color)}<span><strong>${esc(kid.name)}</strong>${info ? ` · ${esc(info)}` : ''}</span>
         <button type="button" class="link-btn" data-action="edit-kid" data-id="${esc(kid.id)}">bearbeiten</button></div>
       ${
         hasPlan
-          ? `${renderGrid(state, kid, today)}
+          ? `${photoBar}
+          ${hasLessons || photo ? '' : '<p class="hint">Mach ein Foto vom Stundenplan: Die App liest die Fächer aus, so gut es geht, und du korrigierst mit ein paar Tipps. Oder tippe unten direkt auf die Stunden.</p>'}
+          ${renderGrid(state, kid, today)}
           <p class="hint">Tippe auf eine Stunde, um das Fach einzutragen. Gleiche Fächer bekommen dieselbe Farbe.</p>
           <button type="button" class="btn btn--ghost" data-action="periods">Stundenraster: ${kid.periods.length} Stunden, ${esc(kid.periods[0]?.start || '')}–${esc(kid.periods[kid.periods.length - 1]?.end || '')}</button>`
           : `<div class="empty-state"><p>${esc(kid.name)} geht in ${kid.type === 'krippe' ? 'die Krippe' : 'den Kindergarten'}, da gibt es keinen Stundenplan. Bring- und Abholzeiten trägst du unter „Abholen“ ein.</p>
@@ -139,6 +120,18 @@ export default {
       openPeriodsForm(kid);
     } else if (action === 'edit-kid' && kid) {
       openKidForm(kid);
+    } else if (action === 'view-photo' && kid) {
+      openPhotoViewer(kid);
+    } else if (action === 'edit-with-photo' && kid) {
+      openPhotoImport(kid);
     }
+  },
+
+  onChange(e, ctx) {
+    if (e.target.dataset.change !== 'timetable-photo') return;
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    const kid = byId(ctx.state.kids, selectedKidId);
+    if (file && kid) openPhotoImport(kid, file);
   },
 };

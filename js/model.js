@@ -5,7 +5,7 @@
 
 export const SCHEMA_VERSION = 1;
 
-export const COLLECTIONS = ['members', 'kids', 'lessons', 'pickups', 'pickupOverrides', 'events', 'closures'];
+export const COLLECTIONS = ['members', 'kids', 'lessons', 'pickups', 'pickupOverrides', 'events', 'closures', 'photos'];
 
 // Markerfarben: kräftig genug für Punkte und Ränder, in hell und dunkel lesbar
 export const COLORS = ['#E5484D', '#F76B15', '#D9A300', '#30A46C', '#12A594', '#0091FF', '#8E4EC6', '#D6409F'];
@@ -50,6 +50,7 @@ export function emptyState() {
     pickupOverrides: [],
     events: [],
     closures: [],
+    photos: [],
     tombstones: {},
   };
 }

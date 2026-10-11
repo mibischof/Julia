@@ -38,7 +38,7 @@ jobs:
       - name: Nur App-Dateien veröffentlichen
         run: |
           mkdir _site
-          cp -r index.html manifest.webmanifest sw.js .nojekyll css js fonts icons _site/
+          cp -r index.html manifest.webmanifest sw.js .nojekyll css js fonts icons vendor _site/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
