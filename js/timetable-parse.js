@@ -27,12 +27,13 @@ export const SUBJECTS = [
   { name: 'Informatik', aliases: ['inf', 'info', 'informatik', 'dgb', 'digitale grundbildung'] },
 ];
 
+// Kurz- und Langform, dazu Englisch (manche Apps sind englisch eingestellt)
 const DAYS = [
-  ['mo', 'montag'],
-  ['di', 'dienstag'],
-  ['mi', 'mittwoch'],
-  ['do', 'donnerstag'],
-  ['fr', 'freitag'],
+  ['mo', 'montag', 'mon', 'monday'],
+  ['di', 'dienstag', 'tue', 'tuesday'],
+  ['mi', 'mittwoch', 'wed', 'wednesday'],
+  ['do', 'donnerstag', 'thu', 'thursday'],
+  ['fr', 'freitag', 'fri', 'friday'],
 ];
 
 /** Kleinbuchstaben, typische Verwechslungen der Texterkennung ausgleichen. */
@@ -98,9 +99,10 @@ function dayOf(text) {
   const norm = normalizeToken(text).replace(/ /g, '');
   if (!norm) return 0;
   for (let i = 0; i < DAYS.length; i++) {
-    const [short, long] = DAYS[i];
-    if (norm === short || norm === long) return i + 1;
-    if (norm.length >= 5 && similarity(norm, long) >= 0.7) return i + 1;
+    if (DAYS[i].includes(norm)) return i + 1;
+    for (const long of [DAYS[i][1], DAYS[i][3]]) {
+      if (norm.length >= 5 && similarity(norm, long) >= 0.7) return i + 1;
+    }
   }
   return 0;
 }
@@ -253,10 +255,13 @@ export function parseTimetable(words, { knownSubjects = [] } = {}) {
       const merged = clusterRows(timeRows.map((r) => ({ c: { y: r.y }, row: r })), step * 0.6);
       const centers = merged.map((m) => m.y);
       rowHeight = merged.length > 1 ? median(centers.slice(1).map((y, i) => y - centers[i])) : wordHeight * 3;
-      // Zeilen ohne erkannte Uhrzeit, aber mit Inhalt darunter ergänzen
-      const lowest = Math.max(...items.filter((it) => it.c.x >= leftEdge && !isTimeOrNumber(it)).map((it) => it.c.y));
-      while (centers.length < 12 && lowest > centers[centers.length - 1] + rowHeight * 0.6) {
-        centers.push(centers[centers.length - 1] + rowHeight);
+      // Zeilen ohne erkannte Uhrzeit ergänzen, solange direkt darunter Inhalt steht
+      // (nicht bis zur Navigationsleiste einer App am unteren Rand)
+      const content = items.filter((it) => it.c.x >= leftEdge && !isTimeOrNumber(it) && !headerSet.has(it));
+      while (centers.length < 12) {
+        const next = centers[centers.length - 1] + rowHeight;
+        if (!content.some((it) => Math.abs(it.c.y - next) < rowHeight * 0.5)) break;
+        centers.push(next);
       }
       rowCenter = (p) => centers[p];
       rowCount = centers.length;
@@ -294,7 +299,8 @@ export function parseTimetable(words, { knownSubjects = [] } = {}) {
     periods = [];
     for (let p = 0; p < rowCount; p++) {
       const t = (rowLabels.get(p) || []).sort((a, b) => a.y - b.y || a.x - b.x).map((x) => x.time);
-      periods.push(t.length >= 2 && t[1] > t[0] ? { start: t[0], end: t[1] } : null);
+      // Viele Apps zeigen nur die Beginnzeit: dann bleibt das Ende offen
+      periods.push(t.length >= 2 && t[1] > t[0] ? { start: t[0], end: t[1] } : t.length ? { start: t[0], end: null } : null);
     }
     if (periods.filter(Boolean).length < 2) periods = null;
   }
@@ -327,7 +333,9 @@ export function parseTimetable(words, { knownSubjects = [] } = {}) {
     list.sort((a, b) => a.c.y - b.c.y || a.c.x - b.c.x);
     const raw = list.map((w) => w.text).join(' ');
     const conf = list.reduce((s, w) => s + (w.conf ?? 50), 0) / list.length / 100;
-    const match = matchSubject(raw, knownSubjects) || list.map((w) => matchSubject(w.text, knownSubjects)).filter(Boolean).sort((a, b) => b.score - a.score)[0];
+    // Ganze Zelle, sonst das erste passende Wort (Fach steht meist oben, darunter Lehrer und Raum)
+    const perWord = list.map((w) => matchSubject(w.text, knownSubjects)).filter(Boolean);
+    const match = matchSubject(raw, knownSubjects) || perWord.find((m) => m.score >= 0.85) || perWord.sort((a, b) => b.score - a.score)[0];
     if (match) {
       lessons.push({ weekday, period, subject: match.name, confidence: Math.min(1, (match.score + conf) / 2), raw });
     } else {

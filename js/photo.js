@@ -40,17 +40,59 @@ export function toJpeg(canvas, quality = 0.72) {
   return canvas.toDataURL('image/jpeg', quality);
 }
 
-/**
- * Graustufen und adaptive Schwelle (Bradley): gleicht Schatten und
- * ungleichmäßiges Licht auf Handyfotos aus. Liefert ein Schwarz-Weiß-Bild.
- */
-export function binarize(canvas) {
+function grayValues(canvas) {
   const { width: w, height: h } = canvas;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  const img = ctx.getImageData(0, 0, w, h);
-  const px = img.data;
+  const px = canvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, w, h).data;
   const gray = new Float32Array(w * h);
   for (let i = 0, j = 0; i < px.length; i += 4, j++) gray[j] = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
+  return gray;
+}
+
+/** Überwiegend dunkles Bild (z. B. Screenshot im Dunkelmodus)? */
+export function isDark(canvas) {
+  const gray = grayValues(canvas);
+  let sum = 0;
+  for (let i = 0; i < gray.length; i += 7) sum += gray[i];
+  return sum / Math.ceil(gray.length / 7) < 110;
+}
+
+function fromGray(gray, w, h) {
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  const out = ctx.createImageData(w, h);
+  for (let j = 0, k = 0; j < gray.length; j++, k += 4) {
+    out.data[k] = out.data[k + 1] = out.data[k + 2] = gray[j];
+    out.data[k + 3] = 255;
+  }
+  ctx.putImageData(out, 0, 0);
+  return canvas;
+}
+
+/** Graustufen mit gestrecktem Kontrast, bei dunklem Bild invertiert (dunkle Schrift auf hell). */
+export function grayscale(canvas, invert = false) {
+  const gray = grayValues(canvas);
+  const sorted = Float32Array.from(gray.filter((_, i) => i % 13 === 0)).sort();
+  const lo = sorted[Math.floor(sorted.length * 0.01)];
+  const hi = sorted[Math.floor(sorted.length * 0.99)];
+  const range = Math.max(1, hi - lo);
+  for (let j = 0; j < gray.length; j++) {
+    const v = Math.min(255, Math.max(0, ((gray[j] - lo) / range) * 255));
+    gray[j] = invert ? 255 - v : v;
+  }
+  return fromGray(gray, canvas.width, canvas.height);
+}
+
+/**
+ * Graustufen und adaptive Schwelle (Bradley): gleicht Schatten und
+ * ungleichmäßiges Licht auf Handyfotos aus. Liefert ein Schwarz-Weiß-Bild,
+ * bei `invert` mit vertauschten Farben (für dunkle Hintergründe).
+ */
+export function binarize(canvas, invert = false) {
+  const { width: w, height: h } = canvas;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const gray = grayValues(canvas);
 
   // Integralbild für schnelle Mittelwerte
   const integral = new Float64Array((w + 1) * (h + 1));
@@ -73,7 +115,8 @@ export function binarize(canvas) {
       const x1 = Math.min(w, x + half + 1);
       const count = (x1 - x0) * (y1 - y0);
       const sum = integral[y1 * (w + 1) + x1] - integral[y0 * (w + 1) + x1] - integral[y1 * (w + 1) + x0] + integral[y0 * (w + 1) + x0];
-      const v = gray[y * w + x] * count < sum * (1 - t) ? 0 : 255;
+      const dark = gray[y * w + x] * count < sum * (1 - t);
+      const v = dark !== invert ? 0 : 255;
       const k = (y * w + x) * 4;
       out.data[k] = out.data[k + 1] = out.data[k + 2] = v;
       out.data[k + 3] = 255;

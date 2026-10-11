@@ -1666,6 +1666,9 @@ dialog.sheet::backdrop {
   flex-direction: column;
   gap: 16px;
 }
+.sheet__body > * {
+  flex-shrink: 0;
+}
 .sheet__foot {
   display: flex;
   flex-wrap: wrap;

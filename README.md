@@ -11,12 +11,13 @@ Eine Web-App (PWA) für den Familienalltag. Sie lässt sich am Handy wie eine no
 
 ## Stundenplan abfotografieren
 
-Unter *Stundenplan* auf „Stundenplan abfotografieren“ tippen und ein Foto aufnehmen oder auswählen.
+Unter *Stundenplan* auf „Stundenplan abfotografieren“ tippen und ein Foto aufnehmen oder auswählen. Ein **Screenshot aus einer Stundenplan-App** (z. B. Schooly) geht auch und wird meist am besten erkannt: hell oder dunkel, farbige Kästchen, Datum neben dem Wochentag, Lehrer- und Raumkürzel in den Zellen. Die Navigationsleiste der App wird ignoriert. Zeigt die App nur die Beginnzeiten, behält jede Stunde ihre bisherige Länge.
 
 1. Das Foto wird verkleinert beim Kind gespeichert (ca. 100 KB) und ist jederzeit ansehbar.
 2. Die Texterkennung ([Tesseract](https://github.com/naptha/tesseract.js)) läuft **auf dem Handy**, das Foto verlässt das Gerät nicht. Beim ersten Mal werden ca. 5 MB geladen, danach geht es auch offline.
-3. Die App sucht die Wochentage (Spalten) und Stundennummern bzw. Uhrzeiten (Zeilen). Erkannte Wörter gleicht sie mit Fächern und üblichen Kürzeln ab, z. B. „D“, „SU“, „Turnen“, „Reli“. Auch schief aufgenommene Fotos werden ausgerichtet.
-4. Unsichere Stunden sind gelb markiert. Zum Korrigieren oben ein Fach wählen und die Stunden antippen. So lässt sich ein Plan auch ganz ohne Erkennung schnell eintragen, mit dem Foto im Blick.
+3. Fotos werden zuerst schwarz-weiß aufbereitet, Screenshots zuerst nur in Graustufen; dunkle Bilder werden invertiert. Ist das Ergebnis schwach, folgt ein zweiter Durchgang mit der anderen Aufbereitung.
+4. Die App sucht die Wochentage (Spalten, auch englisch „Mon“, „Tue“ …) und Stundennummern bzw. Uhrzeiten (Zeilen). Erkannte Wörter gleicht sie mit Fächern und üblichen Kürzeln ab, z. B. „D“, „SU“, „Turnen“, „Reli“. Auch schief aufgenommene Fotos werden ausgerichtet.
+5. Unsichere Stunden sind gelb markiert. Zum Korrigieren oben ein Fach wählen und die Stunden antippen. So lässt sich ein Plan auch ganz ohne Erkennung schnell eintragen, mit dem Foto im Blick.
 
 **Grenzen:** Gedruckte Vordrucke mit handschriftlichen Fächern funktionieren gut, wenn die Schrift ordentlich ist. Bei flüssiger Schreibschrift oder schlechtem Licht erkennt die Texterkennung oft wenig. Dann bleibt das Antippen. Tipps: gerade von oben fotografieren, gutes Licht, Blatt füllt das Bild.
 

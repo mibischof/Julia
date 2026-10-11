@@ -1,11 +1,11 @@
 // "Stundenplan vom Foto": Foto speichern, Text erkennen, Ergebnis neben dem
 // Foto prüfen und mit Antippen korrigieren (Fach wählen → Stunden antippen).
 
-import { addMinutesToTime, WEEKDAYS_SHORT } from './dates.js';
+import { addMinutesToTime, timeToMin, WEEKDAYS_SHORT } from './dates.js';
 import { byId, DEFAULT_PERIODS } from './model.js';
-import { binarize, fileToBitmap, scaled, toJpeg } from './photo.js';
+import { fileToBitmap, scaled, toJpeg } from './photo.js';
 import { getState, lastSaveFailed, mutate } from './store.js';
-import { parseTimetable, SUBJECTS } from './timetable-parse.js';
+import { SUBJECTS } from './timetable-parse.js';
 import { shortSubject, subjectHue } from './subjects.js';
 import { esc, ICONS, openSheet, toast } from './ui.js';
 
@@ -101,9 +101,13 @@ export async function openPhotoImport(kid, file = null) {
 
   function save(withPlan) {
     const now = getState();
+    const useTimes = form.elements.useTimes?.checked && !$('[data-times]').hidden;
     const nextPeriods = periods.map((p, i) => {
       const t = detectedTimes?.[i];
-      return form.elements.useTimes?.checked && !$('[data-times]').hidden && t ? { start: t.start, end: t.end } : p;
+      if (!useTimes || !t) return p;
+      // Nur Beginn erkannt: bisherige Stundenlänge beibehalten
+      const length = Math.max(20, timeToMin(p.end) - timeToMin(p.start)) || 50;
+      return { start: t.start, end: t.end || addMinutesToTime(t.start, length) };
     });
     mutate(({ upsert, remove }) => {
       if (photoUrl) upsert('photos', { id: photoId(kid.id), kidId: kid.id, dataUrl: photoUrl });
@@ -190,18 +194,14 @@ export async function openPhotoImport(kid, file = null) {
     fig.classList.remove('is-empty');
     fig.innerHTML = `<img src="${photoUrl}" alt="Foto vom Stundenplan"><figcaption>Tippen zum Vergrößern</figcaption>`;
 
-    const { recognizeWords } = await import('./ocr.js');
+    const { recognizeTimetable } = await import('./ocr.js');
     const source = scaled(bitmap, 2000);
+    // Screenshots (z. B. aus einer Stundenplan-App) sind meist PNG und so lang wie
+    // ein Handybildschirm; Kamerafotos sind JPEG/HEIC im Format 4:3
+    const screenshot = file.type === 'image/png' || file.type === 'image/webp' || bitmap.height / bitmap.width > 1.9;
     bitmap.close?.();
-    const known = [...extraSubjects];
     progress(0.02, 'Texterkennung wird geladen');
-    let result = parseTimetable(await recognizeWords(binarize(source), { onProgress: (p, t) => progress(p * 0.9, t) }), { knownSubjects: known });
-    if (result.lessons.length < 4) {
-      // Zweiter Versuch mit dem unbearbeiteten Foto
-      progress(0.9, 'Zweiter Versuch');
-      const second = parseTimetable(await recognizeWords(source, { onProgress: (p) => progress(0.9 + p * 0.1, 'Zweiter Versuch') }), { knownSubjects: known });
-      if (second.lessons.length > result.lessons.length) result = second;
-    }
+    const result = await recognizeTimetable(source, { screenshot, knownSubjects: [...extraSubjects], onProgress: progress });
     if (!dialog.open) return;
 
     if (result.lessons.length >= 3) {
@@ -221,7 +221,7 @@ export async function openPhotoImport(kid, file = null) {
         const label = $('[data-times]');
         label.hidden = false;
         label.querySelector('[data-times-text]').textContent = detectedTimes
-          .map((t, i) => (t ? `${i + 1}. ${t.start}–${t.end}` : null))
+          .map((t, i) => (t ? `${i + 1}. ${t.start}${t.end ? `–${t.end}` : ''}` : null))
           .filter(Boolean)
           .join(' · ');
       }

@@ -67,6 +67,40 @@ test('Ohne Nummern und Uhrzeiten: Zeilen aus dem Inhalt', () => {
   assert.equal(lessons.find((l) => l.weekday === 2 && l.period === 2).subject, 'Englisch');
 });
 
+test('App-Screenshot: Navigationsleiste unten wird nicht zur Stunde', () => {
+  const words = [];
+  const put = (text, cx, cy) => words.push({ text, conf: 92, x0: cx - text.length * 7, x1: cx + text.length * 7, y0: cy - 14, y1: cy + 14 });
+  put('9:41', 80, 40);
+  ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].forEach((d, i) => put(d, 260 + i * 200, 300));
+  const t = ['07:50', '08:45', '09:55'];
+  t.forEach((time, p) => {
+    put(time, 80, 420 + p * 230);
+    ['Deutsch', 'Mathe', 'Englisch', 'Musik', 'Lesen'].forEach((s, d) => {
+      put(s, 260 + d * 200, 400 + p * 230);
+      put('HUB', 260 + d * 200, 440 + p * 230);
+    });
+  });
+  ['Heute', 'Woche', 'Aufgaben', 'Noten'].forEach((s, i) => put(s, 150 + i * 280, 2400));
+  const { lessons, info } = parseTimetable(words);
+  assert.equal(info.days, 5);
+  assert.equal(info.rows, 3);
+  assert.equal(lessons.length, 15);
+  assert.ok(lessons.every((l) => !['Woche', 'Aufgaben', 'Noten'].includes(l.subject)));
+  assert.equal(lessons.find((l) => l.weekday === 3 && l.period === 0).subject, 'Englisch');
+});
+
+test('Nur Beginnzeiten: Ende bleibt offen', () => {
+  const words = [];
+  const put = (text, cx, cy) => words.push({ text, conf: 92, x0: cx - text.length * 7, x1: cx + text.length * 7, y0: cy - 14, y1: cy + 14 });
+  ['Mo', 'Di', 'Mi', 'Do', 'Fr'].forEach((d, i) => put(d, 260 + i * 200, 100));
+  ['07:50', '08:45', '09:55'].forEach((time, p) => {
+    put(time, 80, 220 + p * 150);
+    ['Deutsch', 'Mathe', 'SU', 'Musik', 'Lesen'].forEach((s, d) => put(s, 260 + d * 200, 215 + p * 150));
+  });
+  const { periods } = parseTimetable(words);
+  assert.deepEqual(periods, [{ start: '07:50', end: null }, { start: '08:45', end: null }, { start: '09:55', end: null }]);
+});
+
 test('Ohne erkennbare Tabelle kein Ergebnis', () => {
   const { lessons } = parseTimetable([{ text: 'Hallo', conf: 90, x0: 0, x1: 50, y0: 0, y1: 20 }]);
   assert.equal(lessons.length, 0);

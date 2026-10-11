@@ -86,7 +86,7 @@ export default {
     const hasLessons = state.lessons.some((l) => l.kidId === kid.id);
     const photoBar = `<div class="photo-bar">
         <label class="btn ${hasLessons ? 'btn--soft' : 'btn--primary'} file-btn">${ICONS.camera}${photo ? 'Neues Foto' : 'Stundenplan abfotografieren'}
-          <input type="file" accept="image/*" id="f-timetable-photo" data-change="timetable-photo" aria-label="Foto vom Stundenplan aufnehmen oder auswählen"></label>
+          <input type="file" accept="image/*" id="f-timetable-photo" data-change="timetable-photo" aria-label="Foto oder Screenshot vom Stundenplan aufnehmen oder auswählen"></label>
         ${
           photo
             ? `<button type="button" class="photo-thumb" data-action="view-photo" aria-label="Foto vom Stundenplan ansehen"><img src="${photo.dataUrl}" alt=""></button>
@@ -100,7 +100,7 @@ export default {
       ${
         hasPlan
           ? `${photoBar}
-          ${hasLessons || photo ? '' : '<p class="hint">Mach ein Foto vom Stundenplan: Die App liest die Fächer aus, so gut es geht, und du korrigierst mit ein paar Tipps. Oder tippe unten direkt auf die Stunden.</p>'}
+          ${hasLessons || photo ? '' : '<p class="hint">Fotografiere den Stundenplan oder wähle einen Screenshot aus einer Stundenplan-App (z. B. Schooly). Die App liest die Fächer aus, so gut es geht, und du korrigierst mit ein paar Tipps. Oder tippe unten direkt auf die Stunden.</p>'}
           ${renderGrid(state, kid, today)}
           <p class="hint">Tippe auf eine Stunde, um das Fach einzutragen. Gleiche Fächer bekommen dieselbe Farbe.</p>
           <button type="button" class="btn btn--ghost" data-action="periods">Stundenraster: ${kid.periods.length} Stunden, ${esc(kid.periods[0]?.start || '')}–${esc(kid.periods[kid.periods.length - 1]?.end || '')}</button>`

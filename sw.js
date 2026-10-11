@@ -3,7 +3,7 @@
 // Die Texterkennung (vendor/) wird nicht vorab geladen, sondern beim ersten
 // Foto geholt und dann ebenfalls gecacht.
 
-const VERSION = 'v1.1.0';
+const VERSION = 'v1.2.0';
 const CACHE = `familienplaner-${VERSION}`;
 const ASSETS = [
   './',
