@@ -1,0 +1,11 @@
+{
+  "name": "familienplaner",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Familienplaner-PWA: Kalender, Abholzeiten mit Erinnerungen, Stundenplan und Termine der Kinder",
+  "type": "module",
+  "scripts": {
+    "start": "npx --yes serve@14 -l 8080 .",
+    "test": "node --test tests/*.test.js"
+  }
+}

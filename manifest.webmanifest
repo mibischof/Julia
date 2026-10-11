@@ -1,0 +1,21 @@
+{
+  "name": "Familienplaner",
+  "short_name": "Familie",
+  "description": "Kalender, Abholzeiten, Stundenplan und Termine der Kinder",
+  "lang": "de-AT",
+  "start_url": "./#/heute",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F4F6FA",
+  "theme_color": "#2B45C9",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Abholen", "url": "./#/abholen", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Kalender", "url": "./#/kalender", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
